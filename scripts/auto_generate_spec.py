@@ -33,12 +33,34 @@ def clean_name(text):
     return text
 
 def main():
-    if len(sys.argv) < 3:
-        print("Usage: python auto_generate_spec_v2.py <input.pdf> <output_spec.json>")
-        sys.exit(1)
+    import argparse
+    ap = argparse.ArgumentParser()
+    ap.add_argument("input_pdf")
+    ap.add_argument("output_spec")
+    ap.add_argument("--sensitivity", "-s", choices=["low", "medium", "high"], default="medium",
+                    help="Sensitivity level of layout extraction (low=conservative, medium=balanced, high=aggressive)")
+    args = ap.parse_args()
 
-    input_pdf = sys.argv[1]
-    output_spec = sys.argv[2]
+    input_pdf = args.input_pdf
+    output_spec = args.output_spec
+    sensitivity = args.sensitivity
+
+    # Configure parameters dynamically based on sensitivity selection
+    if sensitivity == "low":
+        collision_height = 18.0
+        collision_padding = 6.0
+        max_line_width = 350.0
+        comb_gap_limit = 3.0
+    elif sensitivity == "high":
+        collision_height = 10.0
+        collision_padding = 1.0
+        max_line_width = 520.0
+        comb_gap_limit = 10.0
+    else:  # medium
+        collision_height = 15.5
+        collision_padding = 4.0
+        max_line_width = 450.0
+        comb_gap_limit = 4.0
 
     pdf = pdfplumber.open(input_pdf)
     all_fields = []
@@ -79,6 +101,20 @@ def main():
                 x0, x1, top, bottom = round(ch["x0"], 1), round(ch["x1"], 1), round(ch["top"], 1), round(ch["bottom"], 1)
                 page_checkboxes.append({"x0": x0, "x1": x1, "top": top, "bottom": bottom})
 
+        # Extract text-based checkboxes (e.g. ☐ ☑ □) from words
+        for w in words:
+            text = w["text"]
+            if any(char in text for char in ("☐", "☑", "□", "■", "☒")) or text == "[ ]":
+                x0, x1, top, bottom = round(w["x0"], 1), round(w["x1"], 1), round(w["top"], 1), round(w["bottom"], 1)
+                page_checkboxes.append({"x0": x0, "x1": x1, "top": top, "bottom": bottom})
+
+        # Extract text-based underlines (e.g. _______ or contains ....) from words
+        for w in words:
+            text = w["text"]
+            if re.match(r"^[_.\s\-]{3,}$", text) or ("___" in text) or ("...." in text):
+                x0, x1, top, bottom = round(w["x0"], 1), round(w["x1"], 1), round(w["top"], 1), round(w["bottom"], 1)
+                raw_underlines.append({"x0": x0, "x1": x1, "top": top, "bottom": bottom})
+
         # Remove duplicate lines/underlines with extremely close coordinates
         unique_underlines = []
         for ul in sorted(raw_underlines, key=lambda e: (e["top"], e["x0"])):
@@ -113,7 +149,7 @@ def main():
             groups = []
             current_group = []
             for cb in row:
-                if current_group and cb["x0"] - current_group[-1]["x1"] > 40.0:
+                if current_group and cb["x0"] - current_group[-1]["x1"] > comb_gap_limit:
                     groups.append(current_group)
                     current_group = [cb]
                 else:
@@ -222,17 +258,17 @@ def main():
             ux0, utop, ux1, ubottom = ul["x0"], ul["top"], ul["x1"], ul["bottom"]
             uw = ux1 - ux0
 
-            # A. Filter out massive page-spanning section dividers (width > 450pt or 80% of page)
-            if uw > 450.0 or uw > page_width * 0.8:
+            # A. Filter out massive page-spanning section dividers
+            if uw > max_line_width or uw > page_width * 0.8:
                 continue
 
-            # B. Check if there are words written INSIDE the area just above this line (height 12.0)
+            # B. Check if there are words written INSIDE the area just above this line
             # This identifies whether this area is a LABEL cell.
             words_inside = []
             words_just_below = []
             for w in words:
-                # words written above the line (within 12 points)
-                if utop - 11.5 <= w["top"] < utop and ux0 - 2.0 <= w["x0"] <= ux1 + 2.0:
+                # words written above the line
+                if utop - collision_height <= w["top"] < utop and ux0 - collision_padding <= w["x0"] <= ux1 + collision_padding:
                     words_inside.append(w)
                 # words written below the line (within 15 points)
                 elif utop <= w["top"] < utop + 15.0 and ux0 - 2.0 <= w["x0"] <= ux1 + 2.0:
@@ -347,8 +383,11 @@ def main():
             x0, x1, top, bottom = round(r["x0"], 1), round(r["x1"], 1), round(r["top"], 1), round(r["bottom"], 1)
             w, h = x1 - x0, bottom - top
             
-            # Box cell size: height is between 10 and 25, width is > 20
-            if 20 <= w <= 450 and 10 <= h <= 25:
+            # Identify standard single-line box cells vs. multiline comment areas
+            is_single_line = 20 <= w <= 450 and 10 <= h <= 25
+            is_multiline = 50 <= w <= 500 and 25 < h <= 250
+            
+            if is_single_line or is_multiline:
                 # Check if we already have a text field overlapping this rect closely
                 already_covered = False
                 for f in all_fields:
@@ -369,56 +408,55 @@ def main():
                     if top + 1.0 <= w_item["top"] <= bottom - 1.0 and x0 + 2.0 <= w_item["x0"] <= x1 - 2.0:
                         words_inside.append(w_item)
                 
-                inside_text = " ".join([w_item["text"] for w in sorted(words_inside, key=lambda x: x["x0"])])
-                if inside_text and len(inside_text) > 4 and any(c.isalpha() for c in inside_text):
+                inside_text = " ".join([w_item["text"] for w_item in sorted(words_inside, key=lambda x: x["x0"])])
+                if inside_text and len(inside_text) > 8 and any(c.isalpha() for c in inside_text):
                     # Printed label box, not input box!
                     continue
 
-                # Find labels near this box (just below, or just to the left)
+                # Find labels near this box (above, below, or to the left)
                 below_words = []
                 left_words = []
+                above_words = []
                 for w_item in words:
                     if bottom <= w_item["top"] <= bottom + 15.0 and x0 - 2.0 <= w_item["x0"] <= x1 + 2.0:
                         below_words.append(w_item)
                     elif abs(w_item["top"] - top) < 8.0 and w_item["x1"] < x0 and x0 - w_item["x1"] < 120.0:
                         left_words.append(w_item)
+                    elif top - 15.0 <= w_item["top"] < top and x0 - 2.0 <= w_item["x0"] <= x1 + 2.0:
+                        above_words.append(w_item)
 
-                below_str = " ".join([w_item["text"] for w in sorted(below_words, key=lambda x: x["x0"]) if any(c.isalpha() for c in w_item["text"])])
-                left_str = " ".join([w_item["text"] for w in sorted(left_words, key=lambda x: x["x0"]) if any(c.isalpha() for c in w_item["text"])])
+                below_str = " ".join([w_item["text"] for w_item in sorted(below_words, key=lambda x: x["x0"]) if any(c.isalpha() for c in w_item["text"])])
+                left_str = " ".join([w_item["text"] for w_item in sorted(left_words, key=lambda x: x["x0"]) if any(c.isalpha() for c in w_item["text"])])
+                above_str = " ".join([w_item["text"] for w_item in sorted(above_words, key=lambda x: x["x0"]) if any(c.isalpha() for c in w_item["text"])])
 
                 label_parts = []
-                if left_str:
+                if above_str:
+                    label_parts.append(above_str)
+                elif left_str:
                     label_parts.append(left_str)
-                if below_str:
+                elif below_str:
                     label_parts.append(below_str)
 
                 full_label = " - ".join([p for p in label_parts if p])
-                tooltip = f"Enter {full_label}" if full_label else "Text box"
+                tooltip = f"Enter {full_label}" if full_label else ("Multiline area" if is_multiline else "Text box")
 
-                clean_left = clean_name(left_str)
-                clean_below = clean_name(below_str)
-
-                if clean_left and clean_below:
-                    base_name = f"{clean_left}_{clean_below}"
-                elif clean_below:
-                    base_name = clean_below
-                elif clean_left:
-                    base_name = clean_left
-                else:
-                    base_name = f"textbox_page_{pi+1}_{round(top)}"
-
-                name = clean_name(base_name)
+                clean_name_base = clean_name(above_str if above_str else (left_str if left_str else (below_str if below_str else f"textbox_page_{pi+1}_{round(top)}")))
+                name = clean_name(clean_name_base)
                 name_counts[name] = name_counts.get(name, 0) + 1
                 if name_counts[name] > 1:
                     name = f"{name}_{name_counts[name]}"
 
-                all_fields.append({
+                field_spec = {
                     "page": pi,
                     "kind": "text",
                     "name": name,
                     "rect": [x0, top, x1, bottom],
                     "tooltip": tooltip
-                })
+                }
+                if is_multiline:
+                    field_spec["multiline"] = True
+                    
+                all_fields.append(field_spec)
 
     with open(output_spec, "w") as f:
         json.dump(all_fields, f, indent=1)
