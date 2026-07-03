@@ -2,7 +2,7 @@
 """
 CLI.py
 
-The unified Command-Line Interface for the PDF Form Builder toolkit.
+The unified Command-Line Interface for the PDF Form Fixer toolkit.
 Wraps the entire workflow into a single user-friendly CLI with built-in
 multi-sensitivity pipelines and overlap/alignment debug metrics.
 """
@@ -37,11 +37,11 @@ def main():
  | |_) | | | | |_    | |_ | | | | |_) | |\/| |
  |  __/| |_| |  _|   |  _|| |_| |  _ <| |  | |
  |_|   |____/|_|     |_|   \___/|_| \_\_|  |_|
-  ____  _  _ ___ _    ____  _____ ____  
- |  _ \| | | |_ _| |   |  _ \|  ___|  _ \ 
- | |_) | | | || || |   | | | | |_  | |_) |
- |  _ <| |_| || || |___| |_| |  _| |  _ < 
- |____/ \___/|___|_____|____/|____|_| \_\
+  _____  _  __  __ _____ ____  
+ |  ___|| | \ \/ /|  ___|  _ \ 
+ | |_   | |  \  / | |_  | |_) |
+ |  _|  | |  /  \ |  _| |  _ < 
+ |_|    |_| /_/\_\|_____|_| \_\
 """)
     print(f"=========================================================")
     print(f"=========================================================")
