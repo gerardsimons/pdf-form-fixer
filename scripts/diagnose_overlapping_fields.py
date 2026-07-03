@@ -57,7 +57,8 @@ def main():
             if len(sentence) > 3 and any(c.isalpha() for c in sentence):
                 overlaps_count += 1
                 if overlaps_count <= 20:
-                    print(f"Field {f['prefixed_name']} ({f['kind']}) on page {page_idx+1}:")
+                    field_label = f.get("name", f.get("prefixed_name", "<unnamed>"))
+                    print(f"Field {field_label} ({f['kind']}) on page {page_idx+1}:")
                     print(f"  Rect: [{fx0:.1f}, {ftop:.1f}, {fx1:.1f}, {fbottom:.1f}]")
                     print(f"  Overlaps static text: \"{sentence}\"")
                     print()

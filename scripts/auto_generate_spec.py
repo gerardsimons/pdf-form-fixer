@@ -131,6 +131,75 @@ def main():
         checkboxes_only = []
         comb_fields = []
 
+        # 1b. Cluster same-row, tightly-adjacent underline/hairline fragments together.
+        # Some PDF generators draw one continuous rule, or a whole row of box-cells, as
+        # several separate short vector fragments (e.g. to avoid drawing under an
+        # overlaid checkbox, or one filled rect per digit cell). Left unmerged, each
+        # fragment becomes an independent field: a comb row gets fragmented into N
+        # 1-character fields instead of one comb field, and a decorative divider rule
+        # gets split into several bogus text fields whose combined width would
+        # otherwise have tripped the "massive divider" filter below. Merge same-row
+        # fragments with tiny gaps first, then decide whether the merged run is a comb
+        # field (several roughly-equal-width cells) or one continuous line.
+        underline_rows = []
+        for ul in sorted(unique_underlines, key=lambda e: (e["top"], e["x0"])):
+            placed = False
+            for row in underline_rows:
+                if abs(row[0]["top"] - ul["top"]) < 2.0:
+                    row.append(ul)
+                    placed = True
+                    break
+            if not placed:
+                underline_rows.append([ul])
+
+        merged_underlines = []
+        for row in underline_rows:
+            row = sorted(row, key=lambda x: x["x0"])
+            clusters = []
+            current_cluster = []
+            for ul in row:
+                if current_cluster and ul["x0"] - current_cluster[-1]["x1"] > comb_gap_limit:
+                    clusters.append(current_cluster)
+                    current_cluster = [ul]
+                else:
+                    current_cluster.append(ul)
+            if current_cluster:
+                clusters.append(current_cluster)
+
+            for cluster in clusters:
+                x0 = cluster[0]["x0"]
+                x1 = cluster[-1]["x1"]
+                top = min(item["top"] for item in cluster)
+                bottom = max(item["bottom"] for item in cluster)
+                # Require >=3 similarly-sized, narrow cells before calling it a comb
+                # field. Two adjacent fragments are too ambiguous (could be a
+                # coincidental line break) to commit to comb semantics. The width cap
+                # matters too: some forms underline several *different* wide column
+                # blanks side by side (e.g. "Employer #1 / #2 / #3", each its own
+                # field) with small gaps and near-identical widths - without a per-
+                # cell width ceiling those look "uniform" too and would wrongly
+                # merge distinct fields into one. Genuine single-character comb
+                # cells (digits, postcode letters) are consistently narrow (~20-27pt
+                # observed); 32pt gives headroom above that while staying well under
+                # typical column-blank widths (~100pt+).
+                if len(cluster) >= 3:
+                    widths = [item["x1"] - item["x0"] for item in cluster]
+                    avg_w = sum(widths) / len(widths)
+                    uniform = (
+                        avg_w > 0
+                        and max(widths) <= 32.0
+                        and all(abs(w - avg_w) <= max(4.0, 0.35 * avg_w) for w in widths)
+                    )
+                else:
+                    uniform = False
+
+                if uniform:
+                    comb_fields.append({"x0": x0, "x1": x1, "top": top, "bottom": bottom, "count": len(cluster)})
+                else:
+                    merged_underlines.append({"x0": x0, "x1": x1, "top": top, "bottom": bottom, "fragments": len(cluster)})
+
+        unique_underlines = merged_underlines
+
         # Deduplicate double-drawn or overlapping checkboxes (same box drawn twice for bold/shadow)
         unique_page_checkboxes = []
         for cb in sorted(page_checkboxes, key=lambda x: (x["top"], x["x0"])):
@@ -218,38 +287,74 @@ def main():
 
         # 2b. Process grouped Comb Fields
         for cf in comb_fields:
-            # Find labels near this comb field
+            cf_top, cf_bottom = cf["top"], cf["bottom"]
+            # Comb groups built from hairline border fragments (rather than real
+            # square checkbox-shaped cells) collapse to a near-zero-height sliver at
+            # the bottom of the cell. The true cell height isn't fixed across a form
+            # - e.g. a date row drawn with headroom for a "Day Month Year" header
+            # above it is often noticeably taller than a plain digit row - so look
+            # up the real vertical tick-mark rects that form the cell dividers
+            # (thin, tall rects sharing this row's bottom edge) and use the tallest
+            # one's top. Only fall back to a fixed guess if none are found.
+            if cf_bottom - cf_top < 3.0:
+                tick_tops = [
+                    r["top"] for r in rects
+                    if r["x1"] - r["x0"] <= 2.0
+                    and r["bottom"] - r["top"] > 3.0
+                    and abs(r["bottom"] - cf_bottom) < 2.0
+                    and cf["x0"] - 2.0 <= r["x0"] <= cf["x1"] + 2.0
+                ]
+                cf_top = min(tick_tops) if tick_tops else cf_bottom - 12.0
+
+            # Find labels near this comb field - above (e.g. "Day Month Year"
+            # headers over a date comb), then to the left, then below.
+            above_words = []
             left_words = []
             below_words = []
+            above_candidates = []
             for w in words:
-                if abs(w["top"] - cf["top"]) < 8.0 and w["x1"] < cf["x0"] and cf["x0"] - w["x1"] < 120.0:
+                # Comb headers like "Day  Month  Year" typically sit a full line (or
+                # more) above their box row, with more breathing room than a tight
+                # inline label - use a wider window than a single text line needs,
+                # but only keep the single nearest text row within it (below), so a
+                # wrapped paragraph further up the page can't get pulled in.
+                if cf_top - 26.0 <= w["top"] < cf_top and cf["x0"] - 5.0 <= w["x0"] <= cf["x1"] + 5.0:
+                    above_candidates.append(w)
+                elif abs(w["top"] - cf_top) < 8.0 and w["x1"] < cf["x0"] and cf["x0"] - w["x1"] < 120.0:
                     left_words.append(w)
-                elif cf["bottom"] <= w["top"] <= cf["bottom"] + 15.0 and cf["x0"] - 5.0 <= w["x0"] <= cf["x1"] + 5.0:
+                elif cf_bottom <= w["top"] <= cf_bottom + 10.0 and cf["x0"] - 5.0 <= w["x0"] <= cf["x1"] + 5.0:
                     below_words.append(w)
 
+            if above_candidates:
+                nearest_top = max(w["top"] for w in above_candidates)
+                above_words = [w for w in above_candidates if abs(w["top"] - nearest_top) < 2.0]
+
+            above_str = " ".join([w["text"] for w in sorted(above_words, key=lambda x: x["x0"])])
             left_str = " ".join([w["text"] for w in sorted(left_words, key=lambda x: x["x0"])])
             below_str = " ".join([w["text"] for w in sorted(below_words, key=lambda x: x["x0"])])
 
-            label_parts = []
-            if left_str:
-                label_parts.append(left_str)
-            if below_str:
-                label_parts.append(below_str)
-
-            full_label = " - ".join([p for p in label_parts if p])
+            # Prefer a direct same-row left label over an "above" match: above_str
+            # is inherently noisier (nearest-row heuristic over a wide window), and
+            # a good left label is already a reliable, unambiguous answer on its
+            # own - don't dilute it by concatenating with above_str too.
+            full_label = left_str or above_str or below_str
             tooltip = f"Enter {full_label}" if full_label else f"Segmented entry ({cf['count']} cells)"
 
+            clean_above = clean_name(above_str)
             clean_left = clean_name(left_str)
             clean_below = clean_name(below_str)
 
-            if clean_left and clean_below:
-                name = f"{clean_left}_{clean_below}"
-            elif clean_below:
-                name = clean_below
-            elif clean_left:
+            # Branch on the raw (pre-clean_name) strings: clean_name() maps "" to a
+            # "field" fallback, which would otherwise make every branch here look
+            # truthy even when no label was actually found nearby.
+            if left_str:
                 name = clean_left
+            elif above_str:
+                name = clean_above
+            elif below_str:
+                name = clean_below
             else:
-                name = f"comb_p{pi+1}_{round(cf['top'])}"
+                name = f"comb_p{pi+1}_{round(cf_top)}"
 
             name = clean_name(name)
             name_counts[name] = name_counts.get(name, 0) + 1
@@ -260,7 +365,7 @@ def main():
                 "page": pi,
                 "kind": "comb",
                 "name": name,
-                "rect": [cf["x0"], cf["top"], cf["x1"], cf["bottom"]],
+                "rect": [cf["x0"], cf_top, cf["x1"], cf_bottom],
                 "tooltip": tooltip,
                 "maxlen": cf["count"]
             })
@@ -270,8 +375,18 @@ def main():
             ux0, utop, ux1, ubottom = ul["x0"], ul["top"], ul["x1"], ul["bottom"]
             uw = ux1 - ux0
 
-            # A. Filter out massive page-spanning section dividers
-            if uw > max_line_width or uw > page_width * 0.8:
+            # A. Filter out massive page-spanning section dividers. A line
+            # reconstructed from several small merged fragments (fragments > 1) is
+            # much more likely to be a divider-rendering artifact - that's the
+            # pattern that made it fragmented in the first place - so hold those to
+            # the tighter max_line_width. A line that was always a single unbroken
+            # piece is more likely an intentionally wide answer line (e.g. a "please
+            # explain" blank), so only reject it past the more generous page-width
+            # ratio.
+            if ul.get("fragments", 1) > 1:
+                if uw > max_line_width or uw > page_width * 0.8:
+                    continue
+            elif uw > page_width * 0.8:
                 continue
 
             # B. Check if there are words written INSIDE the area just above this line
@@ -282,8 +397,11 @@ def main():
                 # words written above the line
                 if utop - collision_height <= w["top"] < utop and ux0 - collision_padding <= w["x0"] <= ux1 + collision_padding:
                     words_inside.append(w)
-                # words written below the line (within 15 points)
-                elif utop <= w["top"] < utop + 15.0 and ux0 - 2.0 <= w["x0"] <= ux1 + 2.0:
+                # words written below the line (within 10 points - kept tight so a
+                # line doesn't steal the label belonging to the *next* row when rows
+                # are packed closely; genuine directly-below labels sit much closer
+                # than a full row-to-row gap)
+                elif utop <= w["top"] < utop + 10.0 and ux0 - 2.0 <= w["x0"] <= ux1 + 2.0:
                     words_just_below.append(w)
 
             words_inside = sorted(words_inside, key=lambda x: x["x0"])
@@ -343,10 +461,13 @@ def main():
             # D. Standard Single Input Line/Cell
             below_str = " ".join([w["text"] for w in words_just_below if any(c.isalpha() for c in w["text"])])
             
-            # Find words on the same line to the left
+            # Find words on the same line to the left (12pt tolerance: a same-row
+            # label's baseline can sit slightly off from the line's own top due to
+            # normal font-metrics offset - 10pt was tight enough to miss genuine
+            # same-row labels like "Name")
             left_words = []
             for w in words:
-                if abs(w["top"] - utop) < 10.0:
+                if abs(w["top"] - utop) <= 12.0:
                     if w["x1"] < ux0 and ux0 - w["x1"] < 120.0:
                         left_words.append(w)
             left_str = " ".join([w["text"] for w in sorted(left_words, key=lambda x: x["x0"])])
@@ -363,11 +484,14 @@ def main():
             clean_left = clean_name(left_str)
             clean_below = clean_name(below_str)
 
-            if clean_left and clean_below:
+            # Branch on the raw strings, not clean_name()'s output - clean_name("")
+            # falls back to "field", which would make every branch below look
+            # truthy even when no label was actually found.
+            if left_str and below_str:
                 base_name = f"{clean_left}_{clean_below}"
-            elif clean_below:
+            elif below_str:
                 base_name = clean_below
-            elif clean_left:
+            elif left_str:
                 base_name = clean_left
             else:
                 base_name = f"text_line_page_{pi+1}_{round(utop)}"
@@ -400,6 +524,22 @@ def main():
             is_multiline = 50 <= w <= 500 and 25 < h <= 250
             
             if is_single_line or is_multiline:
+                # Skip barcodes. They're commonly drawn as one solid rect sized like
+                # a plausible input box (this is exactly how a Code39/Code128 barcode
+                # font renders), and their content is digits/asterisks with no
+                # alphabetic characters - so the "printed label, skip it" check just
+                # below (which requires alpha characters) doesn't catch them. Detect
+                # by font name instead, which is far more reliable for this.
+                is_barcode = any(
+                    ch["top"] >= top and ch["top"] <= bottom
+                    and ch["x0"] >= x0 and ch["x0"] <= x1
+                    and any(tag in ch.get("fontname", "").lower() for tag in
+                            ("barcode", "code39", "code128", "3of9", "idautomation", "interleaved"))
+                    for ch in page.chars
+                )
+                if is_barcode:
+                    continue
+
                 # Check if we already have a text field overlapping this rect closely
                 already_covered = False
                 for f in all_fields:
