@@ -22,6 +22,17 @@ wrong.
 
 Built from real worked examples: Dutch immigration (IND) and UWV declaration forms, standard Job Applications, and French Cerfa forms.
 
+## Why?
+
+AI is busy revolutionizing molecular biology, solving quantum physics, automating software engineering, and reshaping the future of humanity. But sometimes... you just want a functioning, typeable PDF form so you don't have to print, handwrite, and scan a 10-page document like it's 1999. 
+
+With all the state-of-the-art AI models at our disposal, we were still struggling with annoying Dutch PDF "forms" that were not real forms. That is why we built this. You're welcome, governments and government users around the world!
+
+### ⚠️ Vibecoding Warning
+This entire toolkit has been aggressively and lovingly **vibecoded** (vibe-coded) in partnership with Gemini CLI. It is built on pure intuition, late-night visual coordinates-shifting, and chaotic layout-analysis hacks. 
+
+**Contributions (especially highly vibecoded ones) are extremely welcome!** If you drop a messy flat PDF in here, run into some weird visual edge-cases, and fix them with your own vibe-coded heuristics, please submit a PR!
+
 ## Contents
 
 ```
