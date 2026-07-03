@@ -131,6 +131,18 @@ def main():
         checkboxes_only = []
         comb_fields = []
 
+        # Deduplicate double-drawn or overlapping checkboxes (same box drawn twice for bold/shadow)
+        unique_page_checkboxes = []
+        for cb in sorted(page_checkboxes, key=lambda x: (x["top"], x["x0"])):
+            dup = False
+            for existing in unique_page_checkboxes:
+                if abs(existing["top"] - cb["top"]) < 2.0 and abs(existing["x0"] - cb["x0"]) < 3.0:
+                    dup = True
+                    break
+            if not dup:
+                unique_page_checkboxes.append(cb)
+        page_checkboxes = unique_page_checkboxes
+
         # Group page_checkboxes by top coordinate (with 2pt tolerance)
         by_row = []
         for cb in sorted(page_checkboxes, key=lambda x: (x["top"], x["x0"])):
