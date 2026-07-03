@@ -13,7 +13,7 @@
 
 # pdf-form-fixer
 
-A [Claude/Gemini Skill](https://docs.claude.com/en/docs/agents-and-tools/agent-skills/overview)
+A [Claude Skill](https://docs.claude.com/en/docs/agents-and-tools/agent-skills/overview)
 *and* a plain standalone toolkit (it's both — see `SKILL.md`) for turning
 flat, non-fillable PDF forms into real, typeable AcroForm PDFs — with
 correct comb-field number/date entry and correct Tab order, including on
@@ -22,21 +22,30 @@ wrong.
 
 Built from real worked examples: Dutch immigration (IND) and UWV declaration forms, standard Job Applications, and French Cerfa forms.
 
+> **Note:** This toolkit is optimized for Dutch government-style forms
+> (IND, UWV) — that's what it was built and tuned against, and where
+> results are consistently excellent. I've also tried it against a
+> handful of French and UK forms (see the French Cerfa and Job
+> Application samples in `sample_forms/`), and while it produces usable
+> drafts there too, results are noticeably rougher and will need some
+> tweaking — see "Form Typologies" and "How to Tweak the AI/Heuristics"
+> below.
+
 ## Why?
 
-AI is busy revolutionizing molecular biology, solving quantum physics, automating software engineering, and reshaping the future of humanity. But sometimes... you just want a functioning, typeable PDF form so you don't have to print, handwrite, and scan a 10-page document like it's 1999. 
+AI is busy revolutionizing molecular biology, solving quantum physics, automating software engineering, and reshaping the future of humanity. But sometimes... you just want a functioning, typeable PDF form so you don't have to print, handwrite, and scan a 10-page document like it's 1999.
 
-With all the state-of-the-art AI models at our disposal, we were still struggling with annoying Dutch PDF "forms" that were not real forms. That is why we built this. You're welcome, governments and government users around the world!
+With all the state-of-the-art AI models at my disposal, I was still struggling with annoying Dutch PDF "forms" that were not real forms. That is why I built this. You're welcome, governments and government users around the world!
 
 ### ⚠️ Vibecoding Warning
-This entire toolkit has been aggressively and lovingly **vibecoded** (vibe-coded) in partnership with Gemini CLI. It is built on pure intuition, late-night visual coordinates-shifting, and chaotic layout-analysis hacks. 
+This entire toolkit has been aggressively and lovingly **vibecoded** (vibe-coded) in partnership with AI. It is built on pure intuition, late-night visual coordinates-shifting, and chaotic layout-analysis hacks.
 
 **Contributions (especially highly vibecoded ones) are extremely welcome!** If you drop a messy flat PDF in here, run into some weird visual edge-cases, and fix them with your own vibe-coded heuristics, please submit a PR!
 
 ## Contents
 
 ```
-SKILL.md                        Expert Gemini Skill procedure and design rationale
+SKILL.md                        Expert Agent Skill procedure and design rationale
 scripts/
   check_fillable_fields.py      Step 0: confirm the PDF needs this at all
   extract_geometry.py           Read exact vector geometry (rects, lines, labels, checkbox glyphs)
@@ -50,7 +59,7 @@ scripts/
 
 ## Quick Start (Automated Bootstrap Pipeline)
 
-To run any flat PDF through our advanced layout-analysis bootstrap pipeline:
+To run any flat PDF through the advanced layout-analysis bootstrap pipeline:
 
 ```bash
 pip install -r requirements.txt
@@ -75,14 +84,14 @@ Forms designed by Dutch organizations (like IND and UWV) are characterized by **
 - **Hollow Vector Boxes**: Fields are drawn as actual vector rectangles (`page.rects`) of height ~15–20pt.
 - **PUA Checkbox Glyphs**: Checkboxes are drawn using specific font-character glyphs in the Unicode Private Use Area (PUA) like `0xE000-0xF8FF` (making them mathematically distinct from plain text).
 - **Contiguous Touching Boxes**: Date, Postcode, and BSN fields are made of rows of contiguous small square boxes.
-- **Why they work so well**: Because the grid and boxes are drawn as exact mathematical shapes, our geometric heuristics can extract and map them with pixel-perfect precision out-of-the-box.
+- **Why they work so well**: Because the grid and boxes are drawn as exact mathematical shapes, the geometric heuristics here can extract and map them with pixel-perfect precision out-of-the-box.
 
 ### 2. Typographic-Heavy Forms (e.g., French Cerfa Forms)
 Forms designed in other standard offices (like French Cerfa or general Microsoft Word exports) rely heavily on **standard typography characters** instead of vector drawings:
 - **Text Underlines**: Underlines are drawn using strings of standard underscores (`_______`) or dotted characters (`.......`) embedded directly in the text words.
 - **Text Checkboxes**: Checkboxes are drawn as plain Unicode ballot box characters (☐, ☑, □, ■) or text brackets (`[ ]`).
 - **Visual Page Dividers**: Borders and section divisions are drawn as long, thin horizontal lines that can span the entire content column, mimicking underlines.
-- **Why they are tricky**: Because the checkboxes and underlines are normal text characters, purely vector-based parsers are completely blind to them. They require a hybrid parser (`auto_generate_spec.py`) that matches standard text symbols and handles table-cell bounding collisions.
+- **Why they are tricky**: Because the checkboxes and underlines are normal text characters, purely vector-based parsers are completely blind to them. They require a hybrid parser (`auto_generate_spec.py`) that matches standard text symbols and handles table-cell bounding collisions. This toolkit was not primarily built or tuned against this typology, so results here are noticeably rougher out-of-the-box — expect to spend real time in the "How to Tweak" section below, or in manual `field_spec.json` polish, to get a clean result.
 
 ---
 
@@ -99,7 +108,7 @@ If an auto-generated form has misplaced, overlapping, or missing fields, you can
    - If text headers are still being covered, increase this to `18.0` or `20.0`. If legitimate input lines under very tight rows are being skipped, lower this to `12.0`.
 
 3. **Section Divider Width Filter** (`uw > 450.0 or uw > page_width * 0.8`):
-   - To ignore page frame borders and section dividing lines, we filter out horizontal lines wider than `450pt`.
+   - To ignore page frame borders and section dividing lines, horizontal lines wider than `450pt` are filtered out.
    - On landscape forms, or forms with ultra-wide full-width comments fields, raise this threshold to `550.0`.
 
 4. **Red Visual Verification Highlights**:
@@ -109,4 +118,4 @@ If an auto-generated form has misplaced, overlapping, or missing fields, you can
 
 ## License
 
-MIT (adjust as you like — this is a starting point for your own repo).
+MIT — see [LICENSE](LICENSE).
