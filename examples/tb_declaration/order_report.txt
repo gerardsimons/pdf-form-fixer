@@ -1,0 +1,49 @@
+Ordered 42 fields across 3 page(s).
+Wrote field_spec_ordered.json
+
+Review this order before building — this is your check/fix step.
+If any field is in a row-cluster it shouldn't be (e.g. a tall
+field accidentally grouped with a neighboring short field),
+adjust --tolerance or fix the input rect and re-run.
+    1  page=2  checkbox  001_purpose_yes
+    2  page=2  checkbox  002_purpose_no
+    3  page=2  comb      003_vnumber
+    4  page=2  text      004_surname
+    5  page=2  text      005_first_names
+    6  page=2  checkbox  006_sex_male
+    7  page=2  checkbox  007_sex_female
+    8  page=2  comb      008_dob
+    9  page=2  text      009_place_of_birth
+   10  page=2  text      010_country_of_birth
+   11  page=2  text      011_nationality
+   12  page=2  checkbox  012_civil_unmarried
+   13  page=2  checkbox  013_civil_married
+   14  page=2  checkbox  014_civil_reg_partnership
+   15  page=2  checkbox  015_civil_divorced
+   16  page=2  checkbox  016_civil_widow
+   17  page=2  text      017_street
+   18  page=2  text      018_house_number
+   19  page=2  comb      019_postcode
+   20  page=2  text      020_town
+   21  page=3  text      021_passport_number
+   22  page=3  text      022_passport_country
+   23  page=3  comb      023_valid_from
+   24  page=3  comb      024_valid_to
+   25  page=3  checkbox  025_partner_no
+   26  page=3  checkbox  026_partner_spouse
+   27  page=3  checkbox  027_partner_registered
+   28  page=3  text      028_partner_surname
+   29  page=3  text      029_partner_first_names
+   30  page=3  checkbox  030_partner_sex_male
+   31  page=3  checkbox  031_partner_sex_female
+   32  page=3  text      032_partner_nationality
+   33  page=4  text      033_partner_street
+   34  page=4  text      034_partner_house_number
+   35  page=4  comb      035_partner_postcode
+   36  page=4  text      036_partner_town
+   37  page=4  text      037_sign_name_foreign_national
+   38  page=4  text      038_sign_place1
+   39  page=4  comb      039_sign_date1
+   40  page=4  text      040_sign_name_legal_rep
+   41  page=4  text      041_sign_place2
+   42  page=4  comb      042_sign_date2

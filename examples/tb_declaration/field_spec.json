@@ -1,0 +1,514 @@
+[
+ {
+  "page": 1,
+  "kind": "checkbox",
+  "name": "purpose_yes",
+  "rect": [
+   241.9,
+   91.5,
+   251.8,
+   102.39999999999998
+  ],
+  "tooltip": "Application for permit for work/study - Yes"
+ },
+ {
+  "page": 1,
+  "kind": "checkbox",
+  "name": "purpose_no",
+  "rect": [
+   241.9,
+   102.10000000000002,
+   251.8,
+   113.10000000000002
+  ],
+  "tooltip": "Application for permit for work/study - No"
+ },
+ {
+  "page": 1,
+  "kind": "comb",
+  "name": "vnumber",
+  "rect": [
+   241.9,
+   140.80000000000007,
+   470.5,
+   153.60000000000002
+  ],
+  "tooltip": "V-number",
+  "maxlen": 10
+ },
+ {
+  "page": 1,
+  "kind": "text",
+  "name": "surname",
+  "rect": [
+   241.9,
+   178.0,
+   540.4,
+   203.39999999999998
+  ],
+  "tooltip": "Surname (as stated in passport)"
+ },
+ {
+  "page": 1,
+  "kind": "text",
+  "name": "first_names",
+  "rect": [
+   241.9,
+   216.69999999999993,
+   540.4,
+   242.30000000000007
+  ],
+  "tooltip": "First names (as stated in passport)"
+ },
+ {
+  "page": 1,
+  "kind": "checkbox",
+  "name": "sex_male",
+  "rect": [
+   241.9,
+   255.5,
+   251.8,
+   266.5
+  ],
+  "tooltip": "Sex - Male"
+ },
+ {
+  "page": 1,
+  "kind": "checkbox",
+  "name": "sex_female",
+  "rect": [
+   241.9,
+   266.19999999999993,
+   251.8,
+   277.1
+  ],
+  "tooltip": "Sex - Female"
+ },
+ {
+  "page": 1,
+  "kind": "comb",
+  "name": "dob",
+  "rect": [
+   241.7,
+   298.80000000000007,
+   453.2,
+   324.0
+  ],
+  "tooltip": "Date of birth (DDMMYYYY)",
+  "maxlen": 8
+ },
+ {
+  "page": 1,
+  "kind": "text",
+  "name": "place_of_birth",
+  "rect": [
+   241.9,
+   337.0,
+   540.4,
+   349.6
+  ],
+  "tooltip": "Place of birth"
+ },
+ {
+  "page": 1,
+  "kind": "text",
+  "name": "country_of_birth",
+  "rect": [
+   241.9,
+   363.0,
+   540.4,
+   376.1
+  ],
+  "tooltip": "Country of birth (as stated in passport)"
+ },
+ {
+  "page": 1,
+  "kind": "text",
+  "name": "nationality",
+  "rect": [
+   241.9,
+   390.0,
+   540.4,
+   402.5
+  ],
+  "tooltip": "Nationality"
+ },
+ {
+  "page": 1,
+  "kind": "checkbox",
+  "name": "civil_unmarried",
+  "rect": [
+   241.9,
+   415.8,
+   251.8,
+   426.8
+  ],
+  "tooltip": "Civil status - unmarried"
+ },
+ {
+  "page": 1,
+  "kind": "checkbox",
+  "name": "civil_married",
+  "rect": [
+   241.9,
+   429.1,
+   251.8,
+   440.1
+  ],
+  "tooltip": "Civil status - married"
+ },
+ {
+  "page": 1,
+  "kind": "checkbox",
+  "name": "civil_reg_partnership",
+  "rect": [
+   241.9,
+   442.5,
+   251.8,
+   453.4
+  ],
+  "tooltip": "Civil status - registered partnership"
+ },
+ {
+  "page": 1,
+  "kind": "checkbox",
+  "name": "civil_divorced",
+  "rect": [
+   241.9,
+   455.8,
+   251.8,
+   466.7
+  ],
+  "tooltip": "Civil status - divorced"
+ },
+ {
+  "page": 1,
+  "kind": "checkbox",
+  "name": "civil_widow",
+  "rect": [
+   241.9,
+   469.1,
+   251.8,
+   480.1
+  ],
+  "tooltip": "Civil status - widow/widower"
+ },
+ {
+  "page": 1,
+  "kind": "text",
+  "name": "street",
+  "rect": [
+   241.9,
+   507.0,
+   540.4,
+   532.6
+  ],
+  "tooltip": "Home address - Street"
+ },
+ {
+  "page": 1,
+  "kind": "text",
+  "name": "house_number",
+  "rect": [
+   241.9,
+   546.0,
+   540.4,
+   571.3
+  ],
+  "tooltip": "Home address - Number"
+ },
+ {
+  "page": 1,
+  "kind": "comb",
+  "name": "postcode",
+  "rect": [
+   241.9,
+   596.9,
+   400.8,
+   609.8
+  ],
+  "tooltip": "Home address - Postcode",
+  "maxlen": 6
+ },
+ {
+  "page": 1,
+  "kind": "text",
+  "name": "town",
+  "rect": [
+   241.9,
+   622.0,
+   540.4,
+   647.8
+  ],
+  "tooltip": "Home address - Town"
+ },
+ {
+  "page": 2,
+  "kind": "text",
+  "name": "passport_number",
+  "rect": [
+   236.4,
+   74.0,
+   540.4,
+   100.0
+  ],
+  "tooltip": "Passport number"
+ },
+ {
+  "page": 2,
+  "kind": "text",
+  "name": "passport_country",
+  "rect": [
+   236.4,
+   113.0,
+   540.4,
+   138.69999999999993
+  ],
+  "tooltip": "Passport - Country"
+ },
+ {
+  "page": 2,
+  "kind": "comb",
+  "name": "valid_from",
+  "rect": [
+   326.2,
+   160.60000000000002,
+   538.4,
+   185.80000000000007
+  ],
+  "tooltip": "Passport valid from (DDMMYYYY)",
+  "maxlen": 8
+ },
+ {
+  "page": 2,
+  "kind": "comb",
+  "name": "valid_to",
+  "rect": [
+   326.2,
+   210.0,
+   538.4,
+   235.19999999999993
+  ],
+  "tooltip": "Passport valid to (DDMMYYYY)",
+  "maxlen": 8
+ },
+ {
+  "page": 2,
+  "kind": "checkbox",
+  "name": "partner_no",
+  "rect": [
+   241.9,
+   247.69999999999993,
+   251.8,
+   258.69999999999993
+  ],
+  "tooltip": "Do you have a spouse/partner - No"
+ },
+ {
+  "page": 2,
+  "kind": "checkbox",
+  "name": "partner_spouse",
+  "rect": [
+   241.9,
+   281.5,
+   251.8,
+   292.5
+  ],
+  "tooltip": "Do you have a spouse/partner - Spouse"
+ },
+ {
+  "page": 2,
+  "kind": "checkbox",
+  "name": "partner_registered",
+  "rect": [
+   241.9,
+   317.9,
+   251.8,
+   328.9
+  ],
+  "tooltip": "Do you have a spouse/partner - Registered partner"
+ },
+ {
+  "page": 2,
+  "kind": "text",
+  "name": "partner_surname",
+  "rect": [
+   241.9,
+   364.0,
+   540.4,
+   390.1
+  ],
+  "tooltip": "Spouse/partner - Surname"
+ },
+ {
+  "page": 2,
+  "kind": "text",
+  "name": "partner_first_names",
+  "rect": [
+   241.9,
+   403.0,
+   540.4,
+   428.9
+  ],
+  "tooltip": "Spouse/partner - First names"
+ },
+ {
+  "page": 2,
+  "kind": "checkbox",
+  "name": "partner_sex_male",
+  "rect": [
+   241.9,
+   442.2,
+   251.8,
+   453.2
+  ],
+  "tooltip": "Spouse/partner Sex - Male"
+ },
+ {
+  "page": 2,
+  "kind": "checkbox",
+  "name": "partner_sex_female",
+  "rect": [
+   241.9,
+   452.9,
+   251.8,
+   463.9
+  ],
+  "tooltip": "Spouse/partner Sex - Female"
+ },
+ {
+  "page": 2,
+  "kind": "text",
+  "name": "partner_nationality",
+  "rect": [
+   241.9,
+   474.0,
+   540.4,
+   486.5
+  ],
+  "tooltip": "Spouse/partner - Nationality"
+ },
+ {
+  "page": 3,
+  "kind": "text",
+  "name": "partner_street",
+  "rect": [
+   241.9,
+   74.0,
+   547.4,
+   100.0
+  ],
+  "tooltip": "Spouse/partner address - Street"
+ },
+ {
+  "page": 3,
+  "kind": "text",
+  "name": "partner_house_number",
+  "rect": [
+   241.9,
+   113.0,
+   547.4,
+   138.69999999999993
+  ],
+  "tooltip": "Spouse/partner address - Number"
+ },
+ {
+  "page": 3,
+  "kind": "comb",
+  "name": "partner_postcode",
+  "rect": [
+   241.9,
+   164.30000000000007,
+   400.8,
+   177.10000000000002
+  ],
+  "tooltip": "Spouse/partner - Postcode",
+  "maxlen": 6
+ },
+ {
+  "page": 3,
+  "kind": "text",
+  "name": "partner_town",
+  "rect": [
+   241.9,
+   189.0,
+   547.4,
+   215.19999999999993
+  ],
+  "tooltip": "Spouse/partner address - Town"
+ },
+ {
+  "page": 3,
+  "kind": "text",
+  "name": "sign_name_foreign_national",
+  "rect": [
+   241.9,
+   307.0,
+   547.4,
+   320.4
+  ],
+  "tooltip": "Name of foreign national"
+ },
+ {
+  "page": 3,
+  "kind": "text",
+  "name": "sign_place1",
+  "rect": [
+   241.9,
+   346.0,
+   547.4,
+   371.5
+  ],
+  "tooltip": "Place (signing - foreign national)"
+ },
+ {
+  "page": 3,
+  "kind": "comb",
+  "name": "sign_date1",
+  "rect": [
+   241.7,
+   394.8,
+   453.2,
+   420.0
+  ],
+  "tooltip": "Signing date - foreign national (DDMMYYYY)",
+  "maxlen": 8
+ },
+ {
+  "page": 3,
+  "kind": "text",
+  "name": "sign_name_legal_rep",
+  "rect": [
+   241.9,
+   462.0,
+   547.4,
+   475.4
+  ],
+  "tooltip": "Name in case of legal representative"
+ },
+ {
+  "page": 3,
+  "kind": "text",
+  "name": "sign_place2",
+  "rect": [
+   241.9,
+   501.0,
+   547.4,
+   526.6
+  ],
+  "tooltip": "Place (signing - legal representative)"
+ },
+ {
+  "page": 3,
+  "kind": "comb",
+  "name": "sign_date2",
+  "rect": [
+   241.7,
+   549.8,
+   453.2,
+   575.0
+  ],
+  "tooltip": "Signing date - legal representative (DDMMYYYY)",
+  "maxlen": 8
+ }
+]

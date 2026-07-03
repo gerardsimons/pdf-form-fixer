@@ -1,0 +1,25 @@
+# Python bytecode
+__pycache__/
+*.pyc
+
+# Local OS metadata
+.DS_Store
+
+# Virtual Environments
+.venv/
+venv/
+env/
+
+# Generated output forms and debug files
+output.pdf
+output/
+verify_out/
+rendered_forms/
+
+# Ignore root-level JSON and PDF files (which are temporary geometry or spec drafts)
+/*.json
+/*.pdf
+
+# But do NOT ignore JSON and PDF files in our core examples folder
+!examples/**/*.json
+!examples/**/*.pdf
