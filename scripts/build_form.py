@@ -100,7 +100,7 @@ def build(source_pdf, field_spec_path, output_pdf,
         touched_pages.add(page_idx)
 
         if kind in ("text", "comb"):
-            da = "/Helv 9 Tf 1 0 0 rg" if kind == "text" else "/Helv 10 Tf 1 0 0 rg"
+            da = "/Helv 9 Tf 0 g" if kind == "text" else "/Helv 10 Tf 0 g"
             field_dict = DictionaryObject()
             field_dict.update({
                 NameObject("/FT"): NameObject("/Tx"),
@@ -176,7 +176,7 @@ def build(source_pdf, field_spec_path, output_pdf,
     acroform = DictionaryObject()
     acroform[NameObject("/Fields")] = acroform_fields
     acroform[NameObject("/NeedAppearances")] = BooleanObject(True)
-    acroform[NameObject("/DA")] = TextStringObject("/Helv 9 Tf 1 0 0 rg")
+    acroform[NameObject("/DA")] = TextStringObject("/Helv 9 Tf 0 g")
 
     dr = DictionaryObject()
     font_dict = DictionaryObject()

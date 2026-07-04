@@ -23,6 +23,7 @@ import json
 import argparse
 import subprocess
 from pypdf import PdfReader, PdfWriter
+from pypdf.generic import NameObject, TextStringObject
 
 
 def main():
@@ -51,6 +52,22 @@ def main():
     reader = PdfReader(args.fillable_pdf)
     writer = PdfWriter()
     writer.append(reader)
+
+    # The shipped PDF's fields use black text (see build_form.py) - but for
+    # this debug preview specifically, override to red so misaligned text is
+    # immediately obvious against the printed form underneath. This only
+    # touches _filled_preview.pdf, never the actual output.pdf deliverable.
+    root = writer._root_object
+    if "/AcroForm" in root:
+        acroform = root["/AcroForm"]
+        if "/DA" in acroform:
+            acroform[NameObject("/DA")] = TextStringObject("/Helv 9 Tf 1 0 0 rg")
+        for field in acroform.get("/Fields", []):
+            field_obj = field.get_object()
+            if "/DA" in field_obj:
+                da = field_obj["/DA"]
+                field_obj[NameObject("/DA")] = TextStringObject(da.replace("0 g", "1 0 0 rg"))
+
     for page in writer.pages:
         writer.update_page_form_field_values(page, mapped_data)
 
